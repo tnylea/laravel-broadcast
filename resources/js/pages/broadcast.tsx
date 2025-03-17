@@ -8,55 +8,39 @@ export default function BroadcastIndex() {
     const [status, setStatus] = useState('Disconnected');
 
     useEffect(() => {
-        console.log('Setting up Echo channel subscription...');
-        
         // Subscribe to the test channel
         const channel = window.Echo.channel('test-channel');
-        console.log('Subscribed to channel:', 'test-channel');
         
-        // Try both with and without the dot prefix
-        channel.listen('test.message', (e: { message: string }) => {
-            console.log('Received message from channel (without dot):', e);
-            setReceivedMessages(prev => [...prev, e.message]);
-        });
-        
+        // Listen for messages
         channel.listen('.test.message', (e: { message: string }) => {
-            console.log('Received message from channel (with dot):', e);
+            console.log('happened');
             setReceivedMessages(prev => [...prev, e.message]);
         });
         
-        // Also try listening to all events on this channel
-        channel.listenToAll((eventName: string, data: any) => {
-            console.log(`Received event ${eventName} with data:`, data);
-            if (data && data.message) {
-                setReceivedMessages(prev => [...prev, `${eventName}: ${data.message}`]);
-            }
-        });
+        // Listen to all events on this channel
+        // channel.listenToAll((eventName: string, data: any) => {
+        //     if (data && data.message) {
+        //         setReceivedMessages(prev => [...prev, `${eventName}: ${data.message}`]);
+        //     }
+        // });
 
         // Update connection status
         window.Echo.connector.pusher.connection.bind('connected', () => {
-            console.log('Connection status changed to: Connected');
             setStatus('Connected');
         });
 
         window.Echo.connector.pusher.connection.bind('disconnected', () => {
-            console.log('Connection status changed to: Disconnected');
             setStatus('Disconnected');
         });
 
         // Check initial connection state
         if (window.Echo.connector.pusher.connection.state === 'connected') {
-            console.log('Initial connection state is: connected');
             setStatus('Connected');
-        } else {
-            console.log('Initial connection state is:', window.Echo.connector.pusher.connection.state);
         }
 
         return () => {
             // Cleanup subscription when component unmounts
-            console.log('Cleaning up Echo channel subscription...');
             channel.stopListening('test.message');
-            channel.stopListening('.test.message');
             channel.stopListeningToAll();
             window.Echo.connector.pusher.connection.unbind('connected');
             window.Echo.connector.pusher.connection.unbind('disconnected');
@@ -66,13 +50,11 @@ export default function BroadcastIndex() {
     const sendMessage = async () => {
         if (!message.trim()) return;
 
-        console.log('Sending message:', message);
         try {
-            const response = await axios.post('/broadcast', { message });
-            console.log('Server response:', response.data);
+            await axios.post('/broadcast', { message });
             setMessage('');
         } catch (error) {
-            console.error('Failed to send message:', error);
+            // Silent fail
         }
     };
 
