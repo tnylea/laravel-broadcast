@@ -15,7 +15,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 // Broadcasting test routes
-Route::get('/broadcast', [BroadcastController::class, 'index'])->name('broadcast.index');
+Route::inertia('/broadcast', 'broadcast')->name('broadcast');
 Route::post('/broadcast', [BroadcastController::class, 'broadcast'])->name('broadcast.send');
 
 require __DIR__.'/settings.php';

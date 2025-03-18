@@ -9,26 +9,20 @@ use Inertia\Inertia;
 class BroadcastController extends Controller
 {
     /**
-     * Display the broadcasting test page.
-     */
-    public function index()
-    {
-        return Inertia::render('broadcast');
-    }
-
-    /**
      * Broadcast a test message.
      */
     public function broadcast(Request $request)
     {
         $message = $request->input('message', 'Hello from Laravel Reverb!');
         
-        // Log the message for debugging
-        \Log::info('Broadcasting message: ' . $message);
-        
         // Broadcast the event
         event(new TestMessage($message));
         
-        return response()->json(['success' => true, 'message' => $message]);
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true, 'message' => $message]);
+        }
+        
+        // Return to the same page with a success flash message
+        return back()->with('success', 'Message sent successfully');
     }
 }

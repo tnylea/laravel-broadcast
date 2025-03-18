@@ -1,5 +1,4 @@
-import { Head } from '@inertiajs/react';
-import axios from 'axios';
+import { Head, router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 
 export default function BroadcastIndex() {
@@ -13,16 +12,10 @@ export default function BroadcastIndex() {
         
         // Listen for messages
         channel.listen('.test.message', (e: { message: string }) => {
-            console.log('happened');
-            setReceivedMessages(prev => [...prev, e.message]);
+            // Get current messages and add the new one
+            const updatedMessages = [...receivedMessages, e.message];
+            setReceivedMessages(updatedMessages);
         });
-        
-        // Listen to all events on this channel
-        // channel.listenToAll((eventName: string, data: any) => {
-        //     if (data && data.message) {
-        //         setReceivedMessages(prev => [...prev, `${eventName}: ${data.message}`]);
-        //     }
-        // });
 
         // Update connection status
         window.Echo.connector.pusher.connection.bind('connected', () => {
@@ -37,7 +30,7 @@ export default function BroadcastIndex() {
         if (window.Echo.connector.pusher.connection.state === 'connected') {
             setStatus('Connected');
         }
-
+        
         return () => {
             // Cleanup subscription when component unmounts
             channel.stopListening('test.message');
@@ -47,15 +40,17 @@ export default function BroadcastIndex() {
         };
     }, []);
 
-    const sendMessage = async () => {
+    const sendMessage = () => {
         if (!message.trim()) return;
 
-        try {
-            await axios.post('/broadcast', { message });
-            setMessage('');
-        } catch (error) {
-            // Silent fail
-        }
+        // Use Inertia router for the POST request
+        // No need for async/await as router.post doesn't return a Promise
+        router.post('/broadcast', { message }, {
+            preserveScroll: true,  // Maintain scroll position
+            onSuccess: () => {
+                setMessage('');  // Clear the input field on success
+            }
+        });
     };
 
     return (
